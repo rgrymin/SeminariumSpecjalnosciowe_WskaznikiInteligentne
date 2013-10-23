@@ -1,0 +1,203 @@
+\input{preamble}
+\usepackage{relsize}
+\usepackage{lipsum}
+\usepackage{alltt}
+
+% c from texinfo.tex
+\def\ifmonospace{\ifdim\fontdimen3\font=0pt }
+
+% c C plus plus
+\def\C++{%
+  \ifmonospace%
+  C++%
+  \else%
+  C\kern-.1667em\raise.30ex\hbox{\smaller{++}}%
+  \fi%
+  \spacefactor1000 }
+
+% c C sharp
+\def\Csharp{%
+  \ifmonospace%
+  C\#%
+  \else%
+  C\kern-.1667em\raise.30ex\hbox{\smaller{\#}}%
+  \fi%
+  \spacefactor1000 }
+
+
+\begin{document}
+% \usebackgroundtemplate{\includegraphics[width=\paperwidth]{img/bg.jpg}}
+\frame{\titlepage}
+
+% Przebieg prezentacji
+\begin{frame}{Przebieg prezentacji}
+  \tableofcontents
+\end{frame}
+
+% The following causes the table of contents to be shown 
+% at the beginning of every subsection. Delete this, if you do not want it.
+\AtBeginSubsection[]{
+  \begin{frame}{Przebieg prezentacji}
+    \tableofcontents[currentsection,currentsubsection]
+  \end{frame}
+}
+
+
+\section{Wprowadzenie}
+
+\subsection{Czym są inteligentne wskaźniki?}
+
+\begin{frame}{Idea inteligentnego wskaźnika}
+  \begin{itemize}
+  \item Inteligentne wskaźniki (ang. \emph{smart pointers}) są obiektami,
+    które przechowują wskaźnik do dynamicznie zaalokowanych obiektów
+    (przechowywanych na stercie). \pause
+  \item Zachowują się bardzo podobnie do
+    wskaźników wbudowanych w \C++ poza tym, że automatycznie usuwają wskazywany
+    obiekt w odpowiednim momencie. \pause
+  \item Prawdopodobnie najwięcej przypadków wadliwego działania
+    programów napisanych w \C++ jest związanych z zarządzaniem
+    pamięcią, wyciekami pamięci, błędami alokacji itp.
+    Inteligentne wskaźniki wspomagają pisanie 
+    programu odporne na takie błędy.
+  \end{itemize}
+\end{frame}
+
+
+\subsection{Korzyści płynące z wykorzystania inteligentnych wskaźników}
+
+\begin{frame}{Mniej błędów}
+\end{frame}
+
+\begin{frame}{,,Exception safety''}
+\end{frame}
+
+\begin{frame}{Odśmiecacz (ang. \textit{garbage collector})}
+  \C++ nie dostarcza mechanizmu odśmiecania (mechanizmu, który w osobnym wątku
+  nadzoruje użyteczność przydzielonych zasobów i zwalnia je, 
+  kiedy są niepotrzebne). \pause
+  
+  Można napisać własny mechanizm odśmiecania, który będzie współpracował
+  z odpowiednio napisanymi inteligentnymi wskaźnikami.
+\end{frame}
+
+\begin{frame}{Kontenery STL}  
+  \begin{minipage}[t][.75\textheight]{\textwidth}
+    \begin{block}{Problem}
+      Co powinniśmy zrobić, jeżeli potrzebujemy
+    \end{block}	
+  \end{minipage}
+\end{frame}
+
+
+\subsection{Gdzie można znaleźć inteligentne wskaźniki?}
+\begin{frame}{Boost}
+  
+\end{frame}
+
+\begin{frame}{Język  C++}
+  Standard \C++11 wprowadził w nagłówku \texttt{<memory>}
+  inteligentne wskaźniki na wzór biblioteki Boost: 
+  \begin{itemize}
+    \pause
+  \item \texttt{std::unique$\_$ptr}, 
+    \pause
+  \item \texttt{std::shared$\_$ptr},
+    \pause
+  \item \texttt{std::weak$\_$ptr},
+    \pause
+  \item \texttt{std::bad$\_$weak$\_$ptr}
+  \end{itemize}\pause
+  Ich implementacja pojawiła się np. w środowisku 
+  \textit{Visual Studio 2010}.	\pause
+  Dokładny ich opis można znaleźć w normie
+  \textit{ISO/IEC 14882:2011 (Information technology — Programming
+    languages --- C++)} w rozdziale 20.7. 
+\end{frame}
+
+
+\section{Wskaźniki z języka \C++}
+
+\subsection{\texttt{std::auto$\_$ptr} \tiny{(przestarzały, ang. deprecated)}}
+
+\begin{frame}{Opis działania}
+  % \begin{minipage}[t][\textheight]{\textwidth}
+  \footnotesize
+  \only<1-6>{
+    \begin{itemize}
+    \item Szablon klasy \texttt{std::auto$\_$ptr} implementuje technikę RAII \\
+      (ang. \textit{Resource Acquisition Is Initialization}) --- 
+      inicjowanie przy pozyskaniu zasobu. \pause 
+      
+    \item Obiekt szablonu klasy \texttt{std::auto$\_$ptr} 
+      jest inicjowany wskaźnikiem
+      i można go używać jak wskaźnika. \pause
+      
+    \item Wskazywany obiekt będzie niejawnie usunięty 
+      w chwili opuszczenia zasięgu
+      obiektu szablonu klasy \texttt{auto$\_$ptr}. \pause
+      
+    \item Jeżeli więcej niż jeden \texttt{auto$\_$ptr} 
+      wskazuje na ten sam obiekt, 
+      to zachowanie jest niezdefiniowane (zazwyczaj 
+      skończy się to błędem ochrony pamięci przy drugiej próbie zwolnienia zasobu). \pause
+    \item Wzorzec klasy \texttt{auto\_ptr} dostarcza semantykę 
+      ścisłej własności:
+      po skopiowaniu jednego obiektu \texttt{auto$\_$ptr} na drugi, 
+      obiekt źródłowy na nic już nie wskazuje 
+      (przechowuje wskaźnik \texttt{NULL}).	\pause
+		
+    \item Konstruktor wzorca i przypisanie wzorca zapewniają, że 
+      można dokonać niejawnej konwersji \texttt{std::auto$\_$ptr<D>} 
+      do  \texttt{std::auto$\_$ptr<B>},
+      jeśli można dokonać konwersji \texttt{D*} do \texttt{B*}.
+    \end{itemize}
+  }
+  \only<7>{
+    \begin{center}
+      \Large
+      \vspace{0.5in}
+      \textbf{Przykłady:}\\
+      \textit{cpp$\_$auto$\_$ptr$\_$ScislaWlasnosc}\\
+      \textit{cpp$\_$auto$\_$ptr$\_$ThreadSafe}
+    \end{center}
+  }
+  % \end{minipage}
+\end{frame}
+
+\begin{frame}{Problemy związane z \texttt{std::auto$\_$ptr}}
+  \begin{itemize}
+  \item Po skopiowaniu jednego obiektu \texttt{auto$\_$ptr} na drugi,
+    obiekt źródłowy ulega \textbf{zmodyfikowaniu} i na nic już nie wskazuje.
+    \pause
+    Ponieważ kopiowanie takiego obiektu modyfikuje go, 
+    nie można kopiować obiektów z atrybutem \texttt{const}
+    (bardzo nieintuicyjne).
+    [\textbf{przykład:} 
+    \textit{cpp$\_$auto$\_$ptr$\_$kopiowanieStalegoObiektu}]
+  \end{itemize}
+\end{frame}
+
+\subsection{\texttt{std::unique$\_$ptr} \tiny{(\C++11)}}
+
+
+\section{Inteligentne wskaźniki z biblioteki Boost}
+\subsection{\texttt{scoped$\_$ptr}}
+
+\subsection{\texttt{shared$\_$ptr}}
+
+\subsection{\texttt{weak$\_$ptr}}
+
+\subsection{\texttt{intrusive$\_$ptr}}
+
+\section{}
+\begin{frame}
+  \begin{center}
+    \huge
+    Dziękuję za uwagę!
+  \end{center}
+ 
+  
+\end{frame}
+
+\end{document}
