@@ -47,7 +47,7 @@
 
 \subsection{Czym są inteligentne wskaźniki?}
 
-\begin{frame}{Idea inteligentnego wskaźnika}
+\begin{frame}[t]{Idea inteligentnego wskaźnika}
   \begin{itemize}
   \item Inteligentne wskaźniki (ang. \emph{smart pointers}) są obiektami,
     które przechowują wskaźnik do dynamicznie zaalokowanych obiektów
@@ -64,35 +64,24 @@
 \end{frame}
 
 
-\subsection{Korzyści płynące z wykorzystania inteligentnych wskaźników}
 
-\begin{frame}{Mniej błędów}
-\end{frame}
-
-\begin{frame}{,,Exception safety''}
-\end{frame}
-
-\begin{frame}{Odśmiecacz (ang. \textit{garbage collector})}
-  \C++ nie dostarcza mechanizmu odśmiecania (mechanizmu, który w osobnym wątku
-  nadzoruje użyteczność przydzielonych zasobów i zwalnia je, 
-  kiedy są niepotrzebne). \pause
-  
-  Można napisać własny mechanizm odśmiecania, który będzie współpracował
-  z odpowiednio napisanymi inteligentnymi wskaźnikami.
-\end{frame}
-
-\begin{frame}{Kontenery STL}  
-  \begin{minipage}[t][.75\textheight]{\textwidth}
-    \begin{block}{Problem}
-      Co powinniśmy zrobić, jeżeli potrzebujemy
-    \end{block}	
-  \end{minipage}
-\end{frame}
 
 
 \subsection{Gdzie można znaleźć inteligentne wskaźniki?}
-\begin{frame}{Boost}
-  
+\begin{frame}{Biblioteka Boost}
+  Biblioteka Boost w wersji 1.54 dostarcza 4 wskaźniki inteligentne:\pause
+  \begin{itemize}
+  	\item \texttt{scoped$\_$ptr}    \pause
+  	\item \texttt{shared$\_$ptr}    \pause
+  	\item \texttt{weak$\_$ptr}      \pause
+  	\item \texttt{intrusive$\_$ptr} 
+  \end{itemize}
+  \pause
+  Biblioteka udostępnia również tablice wskaźników inteligentnych:\pause
+  \begin{itemize}
+  \item	\texttt{scoped$\_$array} \pause
+  \item	\texttt{shared$\_$array} 
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{Język  C++}
@@ -118,12 +107,11 @@
 
 \section{Wskaźniki z języka \C++}
 
-\subsection{\texttt{std::auto$\_$ptr} \tiny{(przestarzały, ang. deprecated)}}
+\subsection{\texttt{std::auto$\_$ptr} \tiny{(przestarzały, ang. depreciated)}}
 
-\begin{frame}{Opis działania}
-  % \begin{minipage}[t][\textheight]{\textwidth}
+\begin{frame}[t]{Opis działania}
   \footnotesize
-  \only<1-6>{
+  \only<1-5>{
     \begin{itemize}
     \item Szablon klasy \texttt{std::auto$\_$ptr} implementuje technikę RAII \\
       (ang. \textit{Resource Acquisition Is Initialization}) --- 
@@ -135,7 +123,11 @@
       
     \item Wskazywany obiekt będzie niejawnie usunięty 
       w chwili opuszczenia zasięgu
-      obiektu szablonu klasy \texttt{auto$\_$ptr}. \pause
+      obiektu szablonu klasy \texttt{auto$\_$ptr}.
+      Szczególnie przydatne w połączeniu z obsługą wyjątków. 
+      
+      [\textbf{Przykład: }\textit{cpp$\_$auto$\_$ptr$\_$ExceptionSafe}]
+      \pause
       
     \item Jeżeli więcej niż jeden \texttt{auto$\_$ptr} 
       wskazuje na ten sam obiekt, 
@@ -145,48 +137,239 @@
       ścisłej własności:
       po skopiowaniu jednego obiektu \texttt{auto$\_$ptr} na drugi, 
       obiekt źródłowy na nic już nie wskazuje 
-      (przechowuje wskaźnik \texttt{NULL}).	\pause
+      (przechowuje wskaźnik \texttt{NULL}).
+      
+      [\textbf{Przykład:} \textit{cpp$\_$auto$\_$ptr$\_$ScislaWlasnosc}]
+  
 		
-    \item Konstruktor wzorca i przypisanie wzorca zapewniają, że 
-      można dokonać niejawnej konwersji \texttt{std::auto$\_$ptr<D>} 
-      do  \texttt{std::auto$\_$ptr<B>},
-      jeśli można dokonać konwersji \texttt{D*} do \texttt{B*}.
     \end{itemize}
   }
-  \only<7>{
-    \begin{center}
-      \Large
-      \vspace{0.5in}
-      \textbf{Przykłady:}\\
-      \textit{cpp$\_$auto$\_$ptr$\_$ScislaWlasnosc}\\
-      \textit{cpp$\_$auto$\_$ptr$\_$ThreadSafe}
-    \end{center}
+  \only<6>{
+    \begin{itemize}
+      \item Konstruktor wzorca i przypisanie wzorca zapewniają, że 
+        można dokonać niejawnej konwersji \texttt{std::auto$\_$ptr<D>} 
+        do  \texttt{std::auto$\_$ptr<B>},
+        jeśli można dokonać konwersji \texttt{D*} do \texttt{B*}
+        (możliwe niejawne rzutowanie w górę hierarchii dziedziczenia) \pause
+        
+    \end{itemize}
   }
-  % \end{minipage}
+
 \end{frame}
 
 \begin{frame}{Problemy związane z \texttt{std::auto$\_$ptr}}
   \begin{itemize}
-  \item Po skopiowaniu jednego obiektu \texttt{auto$\_$ptr} na drugi,
+  \small
+  \item Po skopiowaniu jednego obiektu \texttt{std::auto$\_$ptr} na drugi,
     obiekt źródłowy ulega \textbf{zmodyfikowaniu} i na nic już nie wskazuje.
-    \pause
+
     Ponieważ kopiowanie takiego obiektu modyfikuje go, 
     nie można kopiować obiektów z atrybutem \texttt{const}
     (bardzo nieintuicyjne).
+    
     [\textbf{przykład:} 
     \textit{cpp$\_$auto$\_$ptr$\_$kopiowanieStalegoObiektu}]
+    
+    \pause
+    
+    
+          \item Nie da się stosować obiektów \texttt{auto$\_$ptr} jako elementów standardowych kolekcji (\texttt{std::list}, \texttt{std::vector}, itp.). Kolekcje STL nakładają wymagania na swoje elementy, których \texttt{auto$\_$ptr}
+          nie spełnia.
+      Nie powinno się stosować jako typ elementów tablic --- próba posortowania 
+      takiej tablicy może przynieść złe efekty (niezgodny ze standardową biblioteką algorytmów). \pause
+      
+      \item Wzorzec \texttt{std::auto$\_$ptr} wyszedł z użytku (jest niezalecany). Mimo wszystko często można go spotkać w projektach. De facto
+      nie jest to wskaźnik inteligentny. Standard \C++11 wprowadził \texttt{std::unique$\_$ptr}, który znacznie lepiej radzi sobie od jego kulawego poprzednika.
   \end{itemize}
 \end{frame}
 
 \subsection{\texttt{std::unique$\_$ptr} \tiny{(\C++11)}}
 
+\begin{frame}[t]{Opis działania}
+  \footnotesize
+  \only<1-7>{
+  \begin{itemize}
+  	\item Przechowuje wskaźnik do obiektu zaalokowanego dynamicznie.
+  	  \pause
+  	
+  	\item Tak jak \texttt{std::auto$\_$ptr} dostarcza semantykę ścisłej własności.
+  	  Dwie instancje \texttt{std::unique$\_$ptr} nie mogą wskazywać tego samego obiektu
+  	  jednocześnie.
+  	  \pause
+  	  
+ 	    	  
+  	\item Można dostarczyć do niego odpowiednią implementację (tzw. deleter), która
+  	  zajmie się usuwaniem zarządzanego obiektu.
+  	  \pause
+  	  
+  	\item Bezpieczniejszy niż \texttt{std::auto$\_$ptr}, współpracuje z kolejkami STL.
+  	  \pause
+  	  
+  	\item Do przeniesienia odpowiedzialności na inny obiekt
+  	  \texttt{std::unique$\_$ptr} za wskazywany obiekt wykorzystywana jest
+  	  funkcja \texttt{std::move}. 
+  	  
+  	  [\textbf{Przykład: }\textit{cpp$\_$unique$\_$ptr$\_$move}]
+  	  \pause
+  	  
+  	\item Do zwolnienia odpowiedzialności za wskazywany obiekt służy
+  	  metoda \texttt{std::unique$\_$ptr::release}.
+  	  
+  	  [\textbf{Przykład: }\textit{cpp$\_$unique$\_$ptr$\_$release}]
+  	  \pause
+  	
+  	\item W celu usunięcia wskazywanego obiektu i zaalokowania nowego służy metoda
+  	  \texttt{std::unique$\_$ptr::reset}
+  \end{itemize}
+  }
+  \only<8->{
+  	\begin{itemize}
+  	  \item Do zamiany odpowiedzialności za wskazywane obiekty między 
+  	    obiektami \texttt{unique$\_$ptr}
+  	    służy metoda \texttt{std::unique$\_$ptr::swap}
+  	    	  
+  	    [\textbf{Przykład: }\textit{cpp$\_$unique$\_$ptr$\_$swap}]
+  	    \pause
+  	    	  
+  	\end{itemize}
+  }
+\end{frame}
 
 \section{Inteligentne wskaźniki z biblioteki Boost}
+
 \subsection{\texttt{scoped$\_$ptr}}
 
+\begin{frame}[t]{Opis działania}
+  \footnotesize
+  
+  \only<1-5>{
+  \begin{itemize}
+    \item Dostarcza funkcjonalność RAII (inicjowanie przy pozyskaniu zasobu).
+      Nie dostarcza mechanizmów wspólnej własności i przekazywania własności. 
+      \pause
+    
+    \item Nazwa wzorca oraz wprowadzona semantyka (nie da się kopiować obiektu tej klasy)
+      sygnalizuje, że obiekt wzorca \texttt{scoped$\_$pointer} zamierza zachować 
+      prawo własności wyłącznie w bieżącym zakresie. W trakcie 
+      wyjścia z zakresu mamy gwarancję usunięcia zarządzanego obiektu.
+      
+      $[$\textbf{Przykład: }\textit{cpp$\_$unique$\_$ptr$\_$swap}$]$
+      \pause
+      
+    \item Z uwagi na brak możliwości kopiowania inteligentnych wskaźników 
+      \texttt{scoped$\_$pointer}, jest bezpieczniejszy od wskaźników
+      \texttt{shared$\_$ptr} lub \texttt{std::auto$\_$ptr} dla wskaźników,
+      które nie powinny być kopiowane.
+      \pause      
+      
+    \item Ponieważ \texttt{scoped$\_$ptr} posiada prostą implementację,
+      każda operacja jest tak szybka jak dla wbudowanego wskaźnika
+      i nie ma większych narzutów pamięciowych niż wbudowany wskaźnik.
+      \pause
+      
+    \item \texttt{scoped$\_$ptr} nie może być używany w połączeniu z biblioteką 
+      standardową C++.
+      Należy użyć \texttt{shared$\_$ptr}, jeżeli potrzebujemy inteligentnego wskaźnika,
+      który to umożliwia.
+  \end{itemize}
+  }
+  \only<6>
+  {
+    \begin{itemize}
+      \item \texttt{scoped$\_$ptr} nie może poprawnie zarządzać 
+        dynamicznie utworzoną tablicą obiektów --- w tym celu należy użyć 
+        \texttt{scoped$\_$array}.\pause
+        
+        
+    \end{itemize}
+  }
+\end{frame}
+
 \subsection{\texttt{shared$\_$ptr}}
+\begin{frame}[t]{Opis działania}
+  \footnotesize
+  \only<1-5>
+  {
+    \begin{itemize}
+      \item Szablon klasy \texttt{shared$\_$ptr} przechowuje wskaźnik do dynamicznie
+        zaalokowanego obiektu (przeważnie za pomocą operatora \texttt{new}).
+        \pause
+        
+      \item Wskazywany obiekt jest niszczony, kiedy ostatni wskazujący go obiekt      
+        \texttt{shared$\_$ptr} zostanie zniszczony lub wywołana zostanie jego metoda 
+        \texttt{reset}.
+        \pause
+      
+      \item Każdy \texttt{shared$\_$ptr} spełnia wymogi standardowej biblioteki \C++
+        i może być z nią używany (\texttt{CopyConstructible}, \texttt{MoveConstructible},
+        \texttt{MoveAssignable}).  
+        \pause
+      
+      \item \texttt{shared$\_$ptr} usuwa dokładnie taki wskaźnik, jaki został podany w
+        momencie konstrukcji. Np:
+      
+        \texttt{shared$\_$ptr<void> p1( new int(5) );}
+      
+        usuwanie w taki sposób zaalokowanego obiektu wiąże się z wywołaniem operatora
+        \texttt{\textbf{delete}} na wskaźniku typu \texttt{\textbf{int*}} mimo,
+        że \texttt{p1} jest typu \texttt{shared$\_$ptr<void> }
+        \pause
+      
+      \item Szablon klasy parametryzowany jest literą \texttt{T}, typem obiektu
+        wskazywanego przez obiekt. \texttt{T} może być typem niekompletnym lub
+        typu \texttt{void}. Szablon jak i większość jego metod nie nakłada wymagań na 
+        wskazywany typ \texttt{T}.
+    \end{itemize}
+  }
+  \only<6->{
+  	\begin{itemize}
+  	  \item \texttt{shared$\_$ptr<T>} może być niejawnie przekonwertowany do 
+  	    \texttt{shared$\_$ptr<U>} jeżeli \texttt{T*} może być niejawnie
+  	    przekonwertowane do \texttt{U*}.
+  	    
+  	  \item W bibliotece Boost począwszy od wersji 1.53, \texttt{shared$\_$ptr}
+  	    może być użyty do przechowywania wskaźnika do dynamicznie zaalokowanej
+  	    tablicy.
+  	\end{itemize}
+  }
+\end{frame}
+
+\begin{frame}[t]{Dobre nawyki}
+\footnotesize
+
+\begin{itemize}
+	\item Prosta wskazówka, która prawie całkowicie eliminuje możliwość
+	  wycieków pamięci: używać nazwanego wskaźnika inteligentnego do 
+	  przechowywania rezultatu wywołania operatora \texttt{new}.
+	  
+	\item PRZENIGDY nie używać nienazwanych inteligentnych wskaźników
+	jako obiekty tymczasowe.
+	
+	$[$\textbf{Przykład: }\textit{cpp$\_$shared$\_$ptr$\_$unnamed}$]$
+\end{itemize}
+
+\end{frame}
 
 \subsection{\texttt{weak$\_$ptr}}
+\begin{frame}[t]{Opis działania}
+	\footnotesize
+	
+	\only<1->
+	{
+	  \begin{itemize}
+	    \item Szablon klasy \texttt{weak$\_$ptr} przechowuje ,,słabe odwołanie''
+	      do obiektu, który posiada już odwołanie w \texttt{shared$\_$ptr}.
+	      \pause
+	      
+	    \item Aby móc  dostać się do wskazywanego obiektu,
+	      \texttt{weak$\_$ptr} może zostać
+	      skonwertowany do \texttt{shared\_ptr} za pomocą konstruktora 
+	      \texttt{shared$\_$ptr} lub za pomocą metody \texttt{lock}
+	      \pause
+	    \item 
+	  \end{itemize}
+	}
+\end{frame}
 
 \subsection{\texttt{intrusive$\_$ptr}}
 
